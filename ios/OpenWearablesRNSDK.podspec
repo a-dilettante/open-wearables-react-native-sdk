@@ -18,11 +18,16 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'OpenWearablesHealthSDK', '0.13.0'
+  s.dependency 'OpenWearablesHealthSDK', '0.15.0'
 
-  # Swift/Objective-C compatibility
+  # Swift/Objective-C compatibility. OTHER_SWIFT_FLAGS compiles the enrichment
+  # bridges in ios/OpenWearablesModule.swift (`#if OW_WORKOUT_DETAIL_ENRICHMENT`);
+  # the 0.15.0 dependency above and this flag must move together — either one
+  # alone is a broken build. Verify from JS after `pod install`: the probe
+  # `typeof m.getWorkoutDetailEnrichmentStatus === 'function'` must flip to true.
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
+    'OTHER_SWIFT_FLAGS' => '$(inherited) -DOW_WORKOUT_DETAIL_ENRICHMENT',
   }
 
   s.source_files = "**/*.{h,m,mm,swift,hpp,cpp}"
