@@ -136,5 +136,51 @@ public class OpenWearablesModule: Module {
         Function("getLogLevel") {
             return OpenWearablesHealthSDK.shared.logLevel.rawValue
         }
+
+        // MARK: - Workout-detail enrichment (native iOS SDK >= 0.15.0)
+        //
+        // Compiled only when the pod is built with OW_WORKOUT_DETAIL_ENRICHMENT.
+        // The flag is OFF by default, so this file still compiles against the
+        // pinned native 0.13.0, which has no enrichment facade. Enable it in the
+        // same release that bumps the OpenWearablesHealthSDK dependency to
+        // 0.15.0 — see the release block in OpenWearablesRNSDK.podspec.
+        //
+        // Until then these four functions are simply absent from the native
+        // module, which is why every JS caller must probe before calling.
+        //
+        // Only the redaction-safe status dictionary crosses this bridge. Raw
+        // routes, coordinates, and samples never do (brief 7.6).
+#if OW_WORKOUT_DETAIL_ENRICHMENT
+        AsyncFunction("setWorkoutDetailEnrichmentEnabled") { (enabled: Bool, promise: Promise) in
+            OpenWearablesHealthSDK.shared.setWorkoutDetailEnrichmentEnabled(enabled)
+            promise.resolve()
+        }
+
+        // Deliberately NOT routed through requestAuthorization(types:): that call
+        // replaces the SDK's persisted tracked-type set and would silently reduce
+        // the host app's core sync to the three enrichment types.
+        AsyncFunction("requestWorkoutDetailAuthorization") { (promise: Promise) in
+            Task {
+                do {
+                    try await OpenWearablesHealthSDK.shared.requestWorkoutDetailAuthorization()
+                    promise.resolve()
+                } catch {
+                    promise.reject(
+                        "OW_WORKOUT_DETAIL_AUTH_FAILED",
+                        error.localizedDescription
+                    )
+                }
+            }
+        }
+
+        AsyncFunction("getWorkoutDetailEnrichmentStatus") { (promise: Promise) in
+            promise.resolve(OpenWearablesHealthSDK.shared.getWorkoutDetailEnrichmentStatus())
+        }
+
+        AsyncFunction("startWorkoutDetailEnrichmentPass") { (promise: Promise) in
+            OpenWearablesHealthSDK.shared.startWorkoutDetailEnrichmentPass()
+            promise.resolve()
+        }
+#endif
     }
 }

@@ -95,6 +95,10 @@ or manually:
 cd ios && pod install
 ```
 
+The package declares the native `OpenWearablesHealthSDK` CocoaPod as a
+transitive dependency. Applications should depend only on `open-wearables` and
+must not add the native CocoaPod or a local iOS SDK checkout directly.
+
 ### Android (temporary setup)
 
 The Android implementation currently relies on a local Maven dependency:
@@ -142,19 +146,19 @@ See the example project:
 ## Usage
 
 ```ts
-import OpenWearablesHealthSDK from "open-wearables";
+import OpenWearables from "open-wearables";
 
 // Configure the SDK with your backend host
-OpenWearablesHealthSDK.configure("https://your-api-host.com");
+OpenWearables.configure("https://your-api-host.com");
 
 // Sign in (token-based)
-OpenWearablesHealthSDK.signIn(userId, accessToken, refreshToken, null);
+OpenWearables.signIn(userId, accessToken, refreshToken, null);
 
 // Or sign in (API key)
-OpenWearablesHealthSDK.signIn(userId, null, null, apiKey);
+OpenWearables.signIn(userId, null, null, apiKey);
 
 // Request HealthKit authorization
-await OpenWearablesHealthSDK.requestAuthorization([
+await OpenWearables.requestAuthorization([
   "steps",
   "heartRate",
   "sleep",
@@ -163,6 +167,25 @@ await OpenWearablesHealthSDK.requestAuthorization([
 // Start background sync
 await OpenWearablesHealthSDK.startBackgroundSync();
 ```
+
+### Optional native-module access
+
+The default export remains the normal API for development and production
+builds that include the native SDK. In environments where the native module may
+not be linked, such as Expo Go, use the optional accessor before calling SDK
+methods:
+
+```ts
+import { getOptionalOpenWearablesModule } from "open-wearables";
+
+const openWearables = getOptionalOpenWearablesModule();
+if (openWearables) {
+  await openWearables.startBackgroundSync(90);
+}
+```
+
+The accessor returns `null` when the native module is unavailable, so importing
+the package alone does not fail in those environments.
 
 ## API
 
@@ -316,14 +339,14 @@ Returns the credentials currently stored by the SDK. Synchronous — no `await` 
 Subscribe to native SDK events using the standard Expo module event emitter:
 
 ```ts
-const subscription = OpenWearablesHealthSDK.addListener(
+const subscription = OpenWearables.addListener(
   "onLog",
   ({ message }) => {
     console.log("SDK log:", message);
   }
 );
 
-const authSub = OpenWearablesHealthSDK.addListener(
+const authSub = OpenWearables.addListener(
   "onAuthError",
   ({ statusCode, message }) => {
     console.error(`Auth error ${statusCode}:`, message);
@@ -339,6 +362,71 @@ authSub.remove();
 | ------------- | ----------------------------------------- | -------------------------------------- |
 | `onLog`       | `{ message: string }`                     | Log messages emitted by the native SDK |
 | `onAuthError` | `{ statusCode: number, message: string }` | Authentication errors                  |
+
+---
+
+### Workout-detail enrichment (iOS, native SDK >= 0.15.0)
+
+Captures HealthKit routes, workout-associated samples, and native lap/segment
+events on the device and uploads them against the OW workout. Only a
+redaction-safe status crosses the bridge — routes, coordinates, and sample
+values never reach JavaScript.
+
+| Method                                    | Description                                                |
+| ----------------------------------------- | ---------------------------------------------------------- |
+| `setWorkoutDetailEnrichmentEnabled(bool)` | Turns enrichment on/off. Disabling deletes staged uploads.  |
+| `requestWorkoutDetailAuthorization()`     | HealthKit sheet for workout, workout route, and heart rate. |
+| `getWorkoutDetailEnrichmentStatus()`      | Counts, error classes, and progress. No identifiers.        |
+| `startWorkoutDetailEnrichmentPass()`      | Runs one pass now. Passes also run automatically.           |
+
+`requestWorkoutDetailAuthorization()` is deliberately separate from
+`requestAuthorization(types)`: the core call replaces the SDK's persisted
+tracked-type set, so routing an enrichment request through it would silently
+reduce the host app's core sync to these three types. Resolving does not mean
+access was granted — Apple makes read authorization opaque, so a denied read is
+indistinguishable from absent data.
+
+#### Availability — you must probe
+
+These four methods require the native iOS SDK at **>= 0.15.0**, built with the
+`OW_WORKOUT_DETAIL_ENRICHMENT` Swift flag. The shipped pod pins `0.13.0` with the
+flag **off**, so they are absent from the native module today. They are declared
+on the ambient `OpenWearablesModule` class, so TypeScript cannot warn you —
+probe at runtime. Calling one unprobed against an older SDK throws.
+
+```ts
+import {
+  getOptionalOpenWearablesModule,
+  type WorkoutDetailEnrichmentStatus,
+} from "open-wearables";
+
+const openWearables = getOptionalOpenWearablesModule();
+
+if (typeof openWearables?.getWorkoutDetailEnrichmentStatus === "function") {
+  await openWearables.setWorkoutDetailEnrichmentEnabled(true);
+  await openWearables.requestWorkoutDetailAuthorization();
+
+  const status: WorkoutDetailEnrichmentStatus =
+    await openWearables.getWorkoutDetailEnrichmentStatus();
+
+  console.log(status.historicalProgressPercent, status.routePendingCount);
+}
+```
+
+`WorkoutDetailEnrichmentStatus` fields: `enabled`, `authorizationRequested`,
+`countsByState`, `routePendingCount`, `pendingTombstoneCount`, `errorClasses`,
+`historicalProgressPercent`, `historicalComplete`, `stagedUploads`.
+
+#### Release steps (when native 0.15.0 is published)
+
+1. In `ios/OpenWearablesRNSDK.podspec`, apply both edits from the delimited
+   `RELEASE EDIT` block — bump `s.dependency 'OpenWearablesHealthSDK'` to
+   `'0.15.0'` **and** add
+   `'OTHER_SWIFT_FLAGS' => '$(inherited) -DOW_WORKOUT_DETAIL_ENRICHMENT'` to
+   `s.pod_target_xcconfig`. Either edit alone is a broken build.
+2. `npm run build`.
+3. In each host app: `cd ios && pod install`, then rebuild the dev client.
+4. Confirm the probe above now returns `true`.
 
 ---
 

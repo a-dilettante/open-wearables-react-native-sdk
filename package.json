@@ -19,7 +19,6 @@
     "react-native",
     "expo",
     "OpenWearables",
-    "OpenWearablesHealthSDK",
     "OpenWearablesRNSDK",
     "open-wearables",
     "health",

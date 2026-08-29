@@ -112,3 +112,58 @@ export type SyncStatus = {
   /** ISO8601 timestamp of the current sync session, or null when there is none. */
   createdAt: string | null;
 };
+
+// ---------------------------------------------------------------------------
+// Workout-detail enrichment (iOS, native SDK >= 0.15.0)
+// ---------------------------------------------------------------------------
+
+/**
+ * Where one workout sits in the native enrichment pipeline.
+ *
+ * These are the raw values of the native `EnrichmentJobState` enum and are the
+ * only keys that can appear in {@link WorkoutDetailEnrichmentStatus.countsByState}.
+ *
+ * `published` and `noop` are reachable only from a terminal publication receipt —
+ * HTTP acceptance of an upload never advances a job to a terminal state.
+ */
+export type WorkoutDetailEnrichmentJobState =
+  | "pending"
+  | "collecting"
+  | "uploading"
+  | "awaiting_receipt"
+  | "published"
+  | "noop"
+  | "failed_permanent"
+  | "deferred";
+
+/**
+ * Redaction-safe status of the native workout-detail enrichment pipeline.
+ *
+ * Mirrors the dictionary returned by the native
+ * `getWorkoutDetailEnrichmentStatus()`. It carries counts, error classes, and
+ * progress only — no workout identifier, no coordinate, no sample value, and no
+ * file name — so it is safe to log, display, or forward to JavaScript. Raw route
+ * and sample data never cross this bridge.
+ *
+ * Only available when the linked native iOS SDK is >= 0.15.0.
+ */
+export interface WorkoutDetailEnrichmentStatus {
+  /** Whether enrichment is switched on for the signed-in user. */
+  enabled: boolean;
+  /** Whether the HealthKit enrichment authorization sheet has been requested. */
+  authorizationRequested: boolean;
+  /** Number of jobs per pipeline state. States with no jobs are absent. */
+  countsByState: Partial<Record<WorkoutDetailEnrichmentJobState, number>>;
+  /** Published workouts whose route has still not arrived (reconciliation queue). */
+  routePendingCount: number;
+  /** Locally recorded deletions not yet acknowledged upstream. */
+  pendingTombstoneCount: number;
+  /** Distinct low-cardinality error classes currently recorded, sorted. */
+  errorClasses: string[];
+  /** Historical backfill progress, 0-100. */
+  historicalProgressPercent: number;
+  /** Whether the historical backfill reached its earliest boundary. */
+  historicalComplete: boolean;
+  /** Chunk files currently staged in the native enrichment outbox. */
+  stagedUploads: number;
+}
