@@ -22,6 +22,11 @@ export enum HealthDataType {
   // Activity & Mobility
   Steps = "steps",
   DistanceWalkingRunning = "distanceWalkingRunning",
+  RunningSpeed = "runningSpeed",
+  RunningPower = "runningPower",
+  RunningStrideLength = "runningStrideLength",
+  RunningVerticalOscillation = "runningVerticalOscillation",
+  RunningGroundContactTime = "runningGroundContactTime",
   DistanceCycling = "distanceCycling",
   FlightsClimbed = "flightsClimbed",
   WalkingSpeed = "walkingSpeed",

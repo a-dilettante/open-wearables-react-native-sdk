@@ -26,7 +26,12 @@ export declare class OpenWearablesModule extends NativeModule<OpenWearablesModul
   isSessionValid(): boolean;
 
   // MARK: - HealthKit Authorization
+  requestWorkoutRouteSharing(): Promise<boolean>;
   requestAuthorization(types: HealthDataType[]): Promise<boolean>;
+  /** Returns requestable HealthKit identifiers for this OS; does not prompt. */
+  getSupportedHealthDataTypes(): string[];
+  /** Restores the persisted tracked set without presenting a permission sheet. */
+  restoreTrackedTypes(types: string[]): boolean;
 
   // MARK: - Sync
   setSyncInterval(minutes: number): void;
@@ -70,6 +75,7 @@ export declare class OpenWearablesModule extends NativeModule<OpenWearablesModul
    * Requires native SDK >= 0.15.0; probe for availability before calling.
    */
   setWorkoutDetailEnrichmentEnabled(enabled: boolean): Promise<void>;
+  setWorkoutHeartRateEnrichmentEnabled(enabled: boolean): Promise<void>;
 
   /**
    * Request HealthKit read access for workout, workout route, and heart rate.

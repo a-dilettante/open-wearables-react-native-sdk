@@ -69,12 +69,38 @@ public class OpenWearablesModule: Module {
         
         // MARK: - HealthKit Authorization        
         AsyncFunction("requestAuthorization") { (types: [String], promise: Promise) in
-            let healthTypes = types.compactMap { HealthDataType(rawValue: $0) }
+            let parsedTypes = types.map { HealthDataType(rawValue: $0) }
+            guard parsedTypes.allSatisfy({ $0 != nil }) else {
+                let unsupported = types.enumerated()
+                    .filter { parsedTypes[$0.offset] == nil }
+                    .map { $0.element }
+                    .joined(separator: ", ")
+                promise.reject(
+                    "OW_UNSUPPORTED_HEALTH_TYPE",
+                    "Unsupported HealthKit data type(s): \(unsupported)"
+                )
+                return
+            }
+            let healthTypes = parsedTypes.compactMap { $0 }
             OpenWearablesHealthSDK.shared.requestAuthorization(types: healthTypes) { success in
                 promise.resolve(success)
             }
         }
+
+        Function("getSupportedHealthDataTypes") {
+            OpenWearablesHealthSDK.shared.supportedHealthDataTypes
+        }
+
+        Function("restoreTrackedTypes") { (types: [String]) in
+            OpenWearablesHealthSDK.shared.restoreTrackedTypes(
+                types: types
+            )
+        }
         
+        AsyncFunction("requestWorkoutRouteSharing") { () async -> Bool in
+            await OpenWearablesHealthSDK.shared.requestWorkoutRouteSharing()
+        }
+
         // MARK: - Sync    
         Function("setSyncInterval") { (minutes: Double) in } // (not implemented in iOS SDK)
             
@@ -153,6 +179,11 @@ public class OpenWearablesModule: Module {
 #if OW_WORKOUT_DETAIL_ENRICHMENT
         AsyncFunction("setWorkoutDetailEnrichmentEnabled") { (enabled: Bool, promise: Promise) in
             OpenWearablesHealthSDK.shared.setWorkoutDetailEnrichmentEnabled(enabled)
+            promise.resolve()
+        }
+
+        AsyncFunction("setWorkoutHeartRateEnrichmentEnabled") { (enabled: Bool, promise: Promise) in
+            OpenWearablesHealthSDK.shared.setWorkoutHeartRateEnrichmentEnabled(enabled)
             promise.resolve()
         }
 
