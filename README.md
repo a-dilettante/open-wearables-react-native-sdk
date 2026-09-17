@@ -420,12 +420,12 @@ if (typeof openWearables?.getWorkoutDetailEnrichmentStatus === "function") {
 #### Consuming this fork
 
 This package is the Circle fork of the upstream wrapper. Its podspec depends on
-the Circle fork of the native SDK, `OpenWearablesHealthSDK 0.15.0-circle.1`,
+the Circle fork of the native SDK, `OpenWearablesHealthSDK 0.15.0-circle.2`,
 which is not on CocoaPods trunk. A host app therefore pins both from git:
 
 1. `package.json`: `"open-wearables": "git+https://github.com/a-dilettante/open-wearables-react-native-sdk.git#<commit>"`.
 2. `ios/Podfile` (or an Expo config plugin that edits it):
-   `pod 'OpenWearablesHealthSDK', :git => 'https://github.com/a-dilettante/open_wearables_ios_sdk.git', :tag => '0.15.0-circle.1'`.
+   `pod 'OpenWearablesHealthSDK', :git => 'https://github.com/a-dilettante/open_wearables_ios_sdk.git', :tag => '0.15.0-circle.2'`.
 3. `cd ios && pod install`, then rebuild the dev client.
 4. Confirm the probe above now returns `true`.
 
