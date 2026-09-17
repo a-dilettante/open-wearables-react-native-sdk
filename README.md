@@ -417,15 +417,16 @@ if (typeof openWearables?.getWorkoutDetailEnrichmentStatus === "function") {
 `countsByState`, `routePendingCount`, `pendingTombstoneCount`, `errorClasses`,
 `historicalProgressPercent`, `historicalComplete`, `stagedUploads`.
 
-#### Release steps (when native 0.15.0 is published)
+#### Consuming this fork
 
-1. In `ios/OpenWearablesRNSDK.podspec`, apply both edits from the delimited
-   `RELEASE EDIT` block — bump `s.dependency 'OpenWearablesHealthSDK'` to
-   `'0.15.0'` **and** add
-   `'OTHER_SWIFT_FLAGS' => '$(inherited) -DOW_WORKOUT_DETAIL_ENRICHMENT'` to
-   `s.pod_target_xcconfig`. Either edit alone is a broken build.
-2. `npm run build`.
-3. In each host app: `cd ios && pod install`, then rebuild the dev client.
+This package is the Circle fork of the upstream wrapper. Its podspec depends on
+the Circle fork of the native SDK, `OpenWearablesHealthSDK 0.15.0-circle.1`,
+which is not on CocoaPods trunk. A host app therefore pins both from git:
+
+1. `package.json`: `"open-wearables": "git+https://github.com/a-dilettante/open-wearables-react-native-sdk.git#<commit>"`.
+2. `ios/Podfile` (or an Expo config plugin that edits it):
+   `pod 'OpenWearablesHealthSDK', :git => 'https://github.com/a-dilettante/open_wearables_ios_sdk.git', :tag => '0.15.0-circle.1'`.
+3. `cd ios && pod install`, then rebuild the dev client.
 4. Confirm the probe above now returns `true`.
 
 ---

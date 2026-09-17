@@ -22,8 +22,11 @@ Pod::Spec.new do |s|
 
   # Swift/Objective-C compatibility. OTHER_SWIFT_FLAGS compiles the enrichment
   # bridges in ios/OpenWearablesModule.swift (`#if OW_WORKOUT_DETAIL_ENRICHMENT`);
-  # the 0.15.0 dependency above and this flag must move together — either one
-  # alone is a broken build. Verify from JS after `pod install`: the probe
+  # the Circle-fork native dependency above (0.15.0-circle.1, published only as a
+  # git tag on a-dilettante/open_wearables_ios_sdk — host apps pin it with a
+  # `pod 'OpenWearablesHealthSDK', :git => ..., :tag => ...` Podfile entry) and
+  # this flag must move together — either one alone is a broken build. Verify
+  # from JS after `pod install`: the probe
   # `typeof m.getWorkoutDetailEnrichmentStatus === 'function'` must flip to true.
   s.pod_target_xcconfig = {
     'DEFINES_MODULE' => 'YES',
