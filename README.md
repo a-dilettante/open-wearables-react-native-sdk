@@ -420,12 +420,12 @@ if (typeof openWearables?.getWorkoutDetailEnrichmentStatus === "function") {
 #### Consuming this fork
 
 This package is the Circle fork of the upstream wrapper. Its podspec depends on
-the Circle fork of the native SDK, `OpenWearablesHealthSDK 0.15.0-circle.2`,
+the Circle fork of the native SDK, `OpenWearablesHealthSDK 0.15.1-circle.1`,
 which is not on CocoaPods trunk. A host app therefore pins both from git:
 
 1. `package.json`: `"open-wearables": "git+https://github.com/a-dilettante/open-wearables-react-native-sdk.git#<commit>"`.
 2. `ios/Podfile` (or an Expo config plugin that edits it):
-   `pod 'OpenWearablesHealthSDK', :git => 'https://github.com/a-dilettante/open_wearables_ios_sdk.git', :tag => '0.15.0-circle.2'`.
+   `pod 'OpenWearablesHealthSDK', :git => 'https://github.com/a-dilettante/open_wearables_ios_sdk.git', :tag => '0.15.1-circle.1'`.
 3. `cd ios && pod install`, then rebuild the dev client.
 4. Confirm the probe above now returns `true`.
 
@@ -439,7 +439,7 @@ The following health data type identifiers can be passed to `requestAuthorizatio
 `steps`, `distanceWalkingRunning`, `runningSpeed`, `runningPower`, `runningStrideLength`, `runningVerticalOscillation`, `runningGroundContactTime`, `distanceCycling`, `flightsClimbed`, `walkingSpeed`, `walkingStepLength`, `walkingAsymmetryPercentage`, `walkingDoubleSupportPercentage`, `sixMinuteWalkTestDistance`, `activeEnergy`, `basalEnergy`
 
 **Heart & Cardiovascular**
-`heartRate`, `restingHeartRate`, `heartRateVariabilitySDNN`, `vo2Max`, `oxygenSaturation`, `respiratoryRate`
+`heartRate`, `restingHeartRate`, `heartRateVariabilitySDNN`, `heartRateVariabilityRMSSD` (iOS 27+; skipped on older iOS), `vo2Max`, `oxygenSaturation`, `respiratoryRate`
 
 **Body Measurements**
 `bodyMass`, `height`, `bmi`, `bodyFatPercentage`, `leanBodyMass`, `waistCircumference`, `bodyTemperature`

@@ -18,11 +18,11 @@ Pod::Spec.new do |s|
   s.static_framework = true
 
   s.dependency 'ExpoModulesCore'
-  s.dependency 'OpenWearablesHealthSDK', '0.15.0-circle.2'
+  s.dependency 'OpenWearablesHealthSDK', '0.15.1-circle.1'
 
   # Swift/Objective-C compatibility. OTHER_SWIFT_FLAGS compiles the enrichment
   # bridges in ios/OpenWearablesModule.swift (`#if OW_WORKOUT_DETAIL_ENRICHMENT`);
-  # the Circle-fork native dependency above (0.15.0-circle.2, published only as a
+  # the Circle-fork native dependency above (0.15.1-circle.1, published only as a
   # git tag on a-dilettante/open_wearables_ios_sdk — host apps pin it with a
   # `pod 'OpenWearablesHealthSDK', :git => ..., :tag => ...` Podfile entry) and
   # this flag must move together — either one alone is a broken build. Verify

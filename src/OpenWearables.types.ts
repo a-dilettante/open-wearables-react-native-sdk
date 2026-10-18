@@ -41,6 +41,8 @@ export enum HealthDataType {
   HeartRate = "heartRate",
   RestingHeartRate = "restingHeartRate",
   HeartRateVariabilitySDNN = "heartRateVariabilitySDNN",
+  // iOS 27+ only: skipped by the native SDK on older iOS (no HKSampleType).
+  HeartRateVariabilityRMSSD = "heartRateVariabilityRMSSD",
   Vo2Max = "vo2Max",
   OxygenSaturation = "oxygenSaturation",
   RespiratoryRate = "respiratoryRate",
